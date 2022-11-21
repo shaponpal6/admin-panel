@@ -1,8 +1,10 @@
 import styles from '@styles/Admin.module.css';
 import AuthCheck from '@components/AuthCheck';
-import { firestore, auth, serverTimestamp, getFirestore, query,
+import {
+  firestore, auth, serverTimestamp, getFirestore, query,
   collection,
-  where } from '@lib/firebase';
+  where
+} from '@lib/firebase';
 
 import ImageUploader from '@components/ImageUploader';
 
@@ -17,6 +19,11 @@ import toast from 'react-hot-toast';
 import { UilEye } from '@iconscout/react-unicons'
 import { UilTrashAlt } from '@iconscout/react-unicons'
 import { UilDesktop } from '@iconscout/react-unicons'
+import { UilMessage } from '@iconscout/react-unicons'
+import { UilPen } from '@iconscout/react-unicons'
+import { UilCheckCircle } from '@iconscout/react-unicons'
+import { UilCheck } from '@iconscout/react-unicons'
+import { UilPlus } from '@iconscout/react-unicons'
 import kebabCase from 'lodash.kebabcase';
 
 const collection2 = 'courses';
@@ -43,16 +50,18 @@ function PostManager() {
       {post && (
         <>
           <section>
-            <div style={{display:'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-              <p style={{color: '#436543',margin: 0}}>Course Name:</p>
-              <div style={{display: 'flex', maxWidth: '120px', justifyContent: 'space-evenly'}}>
-                <div onClick={() => setPreview(!preview)}><UilEye size="20" color="#61DAFB"/></div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <p style={{ color: '#436543', margin: 0 }}>Course Name:</p>
+              <div style={{ display: 'flex', maxWidth: '120px', justifyContent: 'space-evenly' }}>
+                <div onClick={() => setPreview(!preview)}><UilEye size="20" color="#61DAFB" /></div>
                 <Link href={`/${post.username}/${post.slug}`}>
-                  <div  style={{width: 30, height: 30}}><UilDesktop size="20" color="#61DAFB"/></div>
+                  <div style={{ width: 30, height: 30 }}><UilDesktop size="20" color="#61DAFB" /></div>
                 </Link>
                 <DeletePostButton postRef={postRef} />
               </div>
             </div>
+            <UpdateCourseName postRef={postRef} defaultValues={post} preview={preview} />
+            <AddLesson postRef={postRef} defaultValues={post} preview={preview} />
             {/* <h1 style={{margin: 0}}>{post.title}</h1>
             <p style={{margin: 0, color: '#ccc', marginBottom: '20px'}}>ID: {post.slug}</p> */}
 
@@ -61,7 +70,7 @@ function PostManager() {
 
           <aside>
             <h3>Lessons</h3>
-            <AddLesson postRef={postRef} defaultValues={post} preview={preview} />
+            <ViewLesson postRef={postRef} defaultValues={post} preview={preview} />
           </aside>
         </>
       )}
@@ -73,45 +82,44 @@ function PostManager() {
 function AddLesson({ defaultValues, postRef, preview }) {
   const { register, errors, handleSubmit, formState, reset, watch } = useForm({ defaultValues, mode: 'onChange' });
   const [title, setTitle] = useState('');
-  
 
-const [data] = useCollectionData(postRef.collection('lessons'))
-console.log('data', data)
+  // Ensure slug is URL safe
+  const slug = encodeURI(kebabCase(title));
 
-   // Ensure slug is URL safe
-   const slug = encodeURI(kebabCase(title));
+  // Validate length
+  const isValid = title.length > 3 && title.length < 100;
 
-   // Validate length
-   const isValid = title.length > 3 && title.length < 100;
- 
-   // Create a new post in firestore
-   const createPost = async (e) => {
-     e.preventDefault();
-     const uid = auth.currentUser.uid;
-     const ref = postRef.collection('lessons').doc(slug);
- 
-     // Tip: give all fields a default value here
-     const data = {
-       title,
-       slug,
-       content: '# hello world lesson content',
-       createdAt: serverTimestamp(),
-       updatedAt: serverTimestamp()
-     };
- 
-     await ref.set(data);
- 
-     toast.success('Lesson created!');
-     setTitle('')
- 
-     // Imperative navigation after doc is set
-     // router.push(`/course/${slug}`);
-   };
+  // Create a new post in firestore
+  const addLessonHandler = async (e) => {
+    e.preventDefault();
+    const uid = auth.currentUser.uid;
+    const ref = postRef.collection('lessons').doc(slug);
+
+    // Tip: give all fields a default value here
+    const data = {
+      title,
+      slug,
+      content: '# hello world lesson content',
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    };
+
+    if (isValid)
+      await ref.set(data)
+    else
+      alert('Oops!! 3 words short and 100 words Long lesson name not allow')
+
+    toast.success('Lesson created!');
+    setTitle('')
+
+    // Imperative navigation after doc is set
+    // router.push(`/course/${slug}`);
+  };
 
   return (
-    <form onSubmit={createPost}>
-
-      <div className={preview ? styles.hidden : styles.controls}>
+    <div>
+      <p>Add Lesson</p>
+      <div className={preview ? styles.hidden : styles.row}>
         <input
           value={title || ""}
           onChange={(e) => setTitle(e.target.value)}
@@ -119,16 +127,62 @@ console.log('data', data)
           className={styles.input}
         />
 
-        <button type="submit" className="btn-green" disabled={!isValid}>
-          Add Lesson
-        </button>
-        {data && data.length ? data.map((item, i) =>(
-          <div key={i}>
-          <p>{item.title}</p>
-          </div>
-        )): null}
+        <div onClick={addLessonHandler}>
+          <UilPlus size="20" color="#333" />
+        </div>
       </div>
-    </form>
+    </div>
+  );
+}
+
+function UpdateCourseName({ defaultValues, postRef, preview }) {
+  const [title, setTitle] = useState(defaultValues.title);
+
+  // Validate length
+  const isValid = title.length > 3 && title.length < 100;
+
+  // Create a new post in firestore
+  const updateCourseHandler = async (e) => {
+    e.preventDefault();
+    const data = {
+      title,
+      updatedAt: serverTimestamp()
+    };
+
+    if (isValid)
+      await postRef.set(data)
+    else
+      alert('Oops!! 3 words short and 100 words Long Course name not allow')
+
+    toast.success('Lesson created!');
+    // setTitle('')
+  };
+
+  return (
+    <div className={preview ? styles.hidden : styles.row}>
+      <input
+        value={title || ""}
+        onChange={(e) => setTitle(e.target.value)}
+        placeholder={"Write lesson name"}
+        className={styles.input}
+      />
+      <div onClick={updateCourseHandler}>
+        <UilMessage size="20" color="#333" />
+      </div>
+    </div>
+  );
+}
+
+function ViewLesson({ defaultValues, postRef, preview }) {
+  const [data] = useCollectionData(postRef.collection('lessons'))
+  return (
+    <div className={preview ? styles.hidden : styles.controls}>
+      {data && data.length ? data.map((item, i) => (
+        <div key={i}>
+          <p>{item.title}</p>
+        </div>
+      )) : null}
+    </div>
   );
 }
 
@@ -161,10 +215,10 @@ function PostForm({ defaultValues, postRef, preview }) {
         <input
           value={defaultValues.title || ""}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder={"Write your " + collection2 +" name"}
+          placeholder={"Write your " + collection2 + " name"}
           className={styles.input}
         />
-        <p style={{margin: 0, color: '#ccc', marginBottom: '20px'}}>ID: {defaultValues.slug}</p>
+        <p style={{ margin: 0, color: '#ccc', marginBottom: '20px' }}>ID: {defaultValues.slug}</p>
 
         <ImageUploader />
 
@@ -206,7 +260,7 @@ function DeletePostButton({ postRef }) {
 
   return (
     <div className="btn-red" onClick={deletePost}>
-      <UilTrashAlt/>
+      <UilTrashAlt />
     </div>
   );
 }
