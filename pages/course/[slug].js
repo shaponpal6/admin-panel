@@ -8,7 +8,7 @@ import {
 
 import ImageUploader from '@components/ImageUploader';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 
 import { useDocumentDataOnce, useCollection, useCollectionData } from 'react-firebase-hooks/firestore';
@@ -57,27 +57,49 @@ function PostManager() {
                 <Link href={`/${post.username}/${post.slug}`}>
                   <div style={{ width: 30, height: 30 }}><UilDesktop size="20" color="#61DAFB" /></div>
                 </Link>
-                <DeletePostButton postRef={postRef} />
+                {/* <DeletePostButton postRef={postRef} /> */}
               </div>
             </div>
             <UpdateCourseName postRef={postRef} defaultValues={post} preview={preview} />
             <AddLesson postRef={postRef} defaultValues={post} preview={preview} />
             {/* <h1 style={{margin: 0}}>{post.title}</h1>
             <p style={{margin: 0, color: '#ccc', marginBottom: '20px'}}>ID: {post.slug}</p> */}
-
-            <PostForm postRef={postRef} defaultValues={post} preview={preview} />
-          </section>
-
-          <aside>
-            <h3>Lessons</h3>
             <ViewLesson postRef={postRef} defaultValues={post} preview={preview} />
-          </aside>
+
+            
+          </section>
         </>
       )}
     </main>
   );
 }
 
+
+
+
+function ViewLesson({ defaultValues, postRef, preview }) {
+  const [lessons] = useCollectionData(postRef.collection('lessons'));
+  const [addNew, setAddNew] = useState(false);
+  const [list, setList] = useState([]);
+
+  useEffect(()=>{
+    if(lessons && lessons.length){
+      setList(lessons.reverse());
+    }
+  },[lessons])
+
+  return (
+    <div className={preview ? styles.hidden : styles.controls}>
+      <p>All Lessons</p>
+      {lessons && lessons.length ? lessons.map((item, i) => (
+        <div key={i}>
+          {/* <p>{item.title}</p> */}
+          <PostForm postRef={postRef.collection('lessons').doc(item.slug)} defaultValues={item} preview={false} />
+        </div>
+      )) : null}
+    </div>
+  );
+}
 
 function AddLesson({ defaultValues, postRef, preview }) {
   const { register, errors, handleSubmit, formState, reset, watch } = useForm({ defaultValues, mode: 'onChange' });
@@ -167,32 +189,22 @@ function UpdateCourseName({ defaultValues, postRef, preview }) {
         className={styles.input}
       />
       <div onClick={updateCourseHandler}>
-        <UilMessage size="20" color="#333" />
+        <UilCheck size="20" color="#333" />
       </div>
     </div>
   );
 }
 
-function ViewLesson({ defaultValues, postRef, preview }) {
-  const [data] = useCollectionData(postRef.collection('lessons'))
-  return (
-    <div className={preview ? styles.hidden : styles.controls}>
-      {data && data.length ? data.map((item, i) => (
-        <div key={i}>
-          <p>{item.title}</p>
-        </div>
-      )) : null}
-    </div>
-  );
-}
-
-function PostForm({ defaultValues, postRef, preview }) {
+function PostForm({ defaultValues, postRef, preview=false }) {
+  const [edit, setEdit] = useState(preview);
+  const [title, setTitle] = useState(defaultValues.title);
   const { register, errors, handleSubmit, formState, reset, watch } = useForm({ defaultValues, mode: 'onChange' });
 
   const { isValid, isDirty } = formState;
 
-  const updatePost = async ({ content, published }) => {
+  const updatePost = async ({ content, published, title }) => {
     await postRef.update({
+      title,
       content,
       published,
       updatedAt: serverTimestamp(),
@@ -201,47 +213,53 @@ function PostForm({ defaultValues, postRef, preview }) {
     reset({ content, published });
 
     toast.success('Post updated successfully!');
+    setTitle(title);
+    setEdit(false);
   };
 
   return (
     <form onSubmit={handleSubmit(updatePost)}>
-      {preview && (
-        <div className="card">
-          <ReactMarkdown>{watch('content')}</ReactMarkdown>
+      {!edit ? (
+        <div onClick={()=>setEdit(true)} style={{backgroundColor: '#ccc', padding: '4px', marginBottom: '4px'}}>
+          <ReactMarkdown>{title}</ReactMarkdown>
         </div>
-      )}
+      ): <div onClick={()=>setEdit(false)}>Hide</div>}
 
-      <div className={preview ? styles.hidden : styles.controls}>
-        <input
-          value={defaultValues.title || ""}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder={"Write your " + collection2 + " name"}
-          className={styles.input}
-        />
-        <p style={{ margin: 0, color: '#ccc', marginBottom: '20px' }}>ID: {defaultValues.slug}</p>
+      {edit ? (
+        <div className={preview ? styles.hidden : styles.controls}>
+          <input
+            name="title"
+            // value={defaultValues.title || ""}
+            // onChange={(e) => setTitle(e.target.value)}
+            placeholder={"Write your " + collection2 + " name"}
+            className={styles.input}
+            ref={register} 
+          />
+          {/* <p style={{ margin: 0, color: '#ccc', marginBottom: '20px' }}>ID: {defaultValues.slug}</p> */}
 
-        <ImageUploader />
+          <ImageUploader />
 
-        <textarea
-          name="content"
-          ref={register({
-            maxLength: { value: 20000, message: 'content is too long' },
-            minLength: { value: 10, message: 'content is too short' },
-            required: { value: true, message: 'content is required' },
-          })}
-        ></textarea>
+          <textarea
+            name="content"
+            ref={register({
+              maxLength: { value: 20000, message: 'content is too long' },
+              minLength: { value: 10, message: 'content is too short' },
+              required: { value: true, message: 'content is required' },
+            })}
+          ></textarea>
 
-        {errors.content && <p className="text-danger">{errors.content.message}</p>}
+          {errors.content && <p className="text-danger">{errors.content.message}</p>}
 
-        <fieldset>
-          <input className={styles.checkbox} name="published" type="checkbox" ref={register} />
-          <label>Published</label>
-        </fieldset>
+          <fieldset>
+            <input className={styles.checkbox} name="published" type="checkbox" ref={register} />
+            <label>Published</label>
+          </fieldset>
 
-        <button type="submit" className="btn-green" disabled={!isDirty || !isValid}>
-          Save Changes
-        </button>
-      </div>
+          <button type="submit" className="btn-green" disabled={!isDirty || !isValid}>
+            Save Changes
+          </button>
+        </div>
+      ) : null}
     </form>
   );
 }

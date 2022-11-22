@@ -4,19 +4,19 @@
 }
 
 .container section {
-  width: 60vw;
-  margin-right: 1rem;
+  width: 100%;
+  padding: 10px;
 }
 
 .container aside {
   display: flex;
   flex-direction: column;
-  width: 20%;
+  /* width: 20%;
   min-width: 250px;
-  min-height: 200px;
+  min-height: 200px; */
   text-align: center;
   position: sticky;
-  top: 80px;
+  /* top: 80px; */
   height: 0;
 }
 
