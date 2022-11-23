@@ -19,9 +19,7 @@ export default function Navbar() {
     <nav className="navbar">
       <ul>
         <li>
-          <Link href="/">
-            <button className="btn-logo">NXT</button>
-          </Link>
+          <Link href="/">App</Link>
         </li>
 
         {/* user is signed-in and has username */}
@@ -30,26 +28,21 @@ export default function Navbar() {
             {/* <li className="push-left">
               <button onClick={signOut}>Sign Out</button>
             </li> */}
-            <li>
-              <Link href="/admin">
-                <button className="btn-blue">Write Posts</button>
-              </Link>
+            {/* <li>
+              <Link href="/admin">Posts</Link>
             </li>
             <li>
-              <Link href="/quiz">
-                <button className="btn-red">Create QUIZ</button>
-              </Link>
+              <Link href="/quiz">QUIZ</Link>
+            </li> */}
+            <li>
+              <Link href="/vocabulary">Vocabulary</Link>
             </li>
             <li>
-              <Link href="/course">
-                <button className="btn-green">Create Course</button>
-              </Link>
+              <Link href="/course">Course</Link>
             </li>
-            <li>
-              <Link href="/competition">
-                <button className="btn-blue">Competition</button>
-              </Link>
-            </li>
+            {/* <li>
+              <Link href="/competition">Competition</Link>
+            </li> */}
             <li>
               <Link href={`/${username}`}>
                 <img src={user?.photoURL || '/hacker.png'} />

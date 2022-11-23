@@ -14,7 +14,8 @@ function PostItem({ post, admin = false, type='post' }) {
     if(type === 'course'){
       return type;
     }
-    return post.username;
+    return type;
+    // return post.username;
   }
   return (
     <div className="card">

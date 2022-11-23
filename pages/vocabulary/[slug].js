@@ -26,7 +26,7 @@ import { UilCheck } from '@iconscout/react-unicons'
 import { UilPlus } from '@iconscout/react-unicons'
 import kebabCase from 'lodash.kebabcase';
 
-const collection2 = 'courses';
+const collection2 = 'vocabulary';
 
 export default function AdminPostEdit(props) {
   return (
