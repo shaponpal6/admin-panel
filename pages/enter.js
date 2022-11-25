@@ -1,11 +1,15 @@
 import { auth, firestore, googleAuthProvider } from '@lib/firebase';
 import { UserContext } from '@lib/context';
 import Metatags from '@components/Metatags';
+import Loading from '@components/Loading';
 
 import { useEffect, useState, useCallback, useContext } from 'react';
-import debounce from 'lodash.debounce';
+import { useRouter } from 'next/router'
 
-export default function Enter(props) {
+import debounce from 'lodash.debounce';
+import styles from '@styles/Admin.module.css';
+
+export default function Enter() {
   const { user, username } = useContext(UserContext);
 
   // 1. user signed out <SignInButton />
@@ -27,19 +31,29 @@ function SignInButton() {
 
   return (
     <>
+    <div className={styles.center + " "+ styles.full} >
       <button className="btn-google" onClick={signInWithGoogle}>
         <img src={'/google.png'} width="30px" /> Sign in with Google
       </button>
       <button onClick={() => auth.signInAnonymously()}>
         Sign in Anonymously
       </button>
+      </div>
     </>
   );
 }
 
 // Sign out button
 function SignOutButton() {
-  return <button onClick={() => auth.signOut()}>Sign Out</button>;
+  const router = useRouter()
+
+  useEffect(() => {
+    // Always do navigations after the first render
+    router.push('/', undefined, { shallow: true })
+  }, [])
+  return (<div className={styles.center + " "+ styles.full} >
+  <button onClick={() => auth.signOut()}>Sign Out</button>
+  </div>);
 }
 
 // Username form
@@ -107,7 +121,7 @@ function UsernameForm() {
 
   return (
     !username && (
-      <section>
+      <section className={styles.center + " "+ styles.full} >
         <h3>Choose Username</h3>
         <form onSubmit={onSubmit}>
           <input name="username" placeholder="myname" value={formValue} onChange={onChange} />
@@ -132,7 +146,7 @@ function UsernameForm() {
 
 function UsernameMessage({ username, isValid, loading }) {
   if (loading) {
-    return <p>Checking...</p>;
+    return <Loading/>
   } else if (isValid) {
     return <p className="text-success">{username} is available!</p>;
   } else if (username && !isValid) {

@@ -10,6 +10,11 @@ import ImageUploader from '@components/ImageUploader';
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
+// import translate from 'google-translate-api-x';
+// import { translate } from '@vitalets/google-translate-api';
+// const { generateRequestUrl, normaliseResponse } = require('google-translate-api-browser');
+// const https = require('https');
+// import axios from 'axios'
 
 import { useDocumentDataOnce, useCollection, useCollectionData } from 'react-firebase-hooks/firestore';
 import { useForm } from 'react-hook-form';
@@ -25,6 +30,9 @@ import { UilCheckCircle } from '@iconscout/react-unicons'
 import { UilCheck } from '@iconscout/react-unicons'
 import { UilPlus } from '@iconscout/react-unicons'
 import kebabCase from 'lodash.kebabcase';
+import Button from '@mui/material/Button';
+import Loader from '@components/Loader';
+import cors from 'cors'
 
 const collection2 = 'vocabulary';
 
@@ -38,7 +46,7 @@ export default function AdminPostEdit(props) {
 
 function PostManager() {
   const [preview, setPreview] = useState(false);
-  const [type, setType] = useState('content');
+  const [type, setType] = useState('lessons');
 
   const router = useRouter();
   const { slug } = router.query;
@@ -53,7 +61,7 @@ function PostManager() {
           <section>
             <div>
               {/* <p style={{ color: '#436543', margin: 0 }}>Course Name:</p> */}
-              <p style={{margin: 0, color: '#436543'}}>Course Name: {post.title}</p>
+              <p style={{margin: 0, color: '#436543'}}>Vocabulary Type: {post.title}</p>
               {/* <div style={{ display: 'flex', maxWidth: '120px', justifyContent: 'space-evenly' }}>
                 <div onClick={() => setPreview(!preview)}><UilEye size="20" color="#61DAFB" /></div>
                 <Link href={`/${post.username}/${post.slug}`}>
@@ -64,8 +72,8 @@ function PostManager() {
             </div>
             <UpdateCourseName postRef={postRef} defaultValues={post} preview={preview} />
             <div className={styles.flexBetween}>
-              <div className={styles.btn1} onClick={() => setType('content')}>Content <UilEye size="20" color="#61DAFB" /></div>
               <div className={styles.btn1} onClick={() => setType('lessons')} style={{background: '#36b9ad'}}>Lessons <UilEye size="20" color="#61DAFB" /></div>
+              <div className={styles.btn1} onClick={() => setType('content')}>Content <UilEye size="20" color="#61DAFB" /></div>
             </div>
             {type==="lessons" ? (
               <div>
@@ -117,6 +125,9 @@ function ViewLesson({ defaultValues, postRef, preview }) {
 function AddLesson({ defaultValues, postRef, preview }) {
   const { register, errors, handleSubmit, formState, reset, watch } = useForm({ defaultValues, mode: 'onChange' });
   const [title, setTitle] = useState('');
+  const [loader, setLoader] = useState(false);
+  const [translated, setTranslated] = useState('');
+  const [language, setLanguage] = useState('bn');
 
   // Ensure slug is URL safe
   const slug = encodeURI(kebabCase(title));
@@ -151,9 +162,39 @@ function AddLesson({ defaultValues, postRef, preview }) {
     // router.push(`/course/${slug}`);
   };
 
+  // const googleTranslator = async (query, language = 'bn') => {
+  //   console.log('googleTranslator :>> ', query);
+  //   setLoader(true)
+  //   try {
+  //     const res = await translate(query, { to: language });
+  //     console.log(res); //=> I speak English
+  //     if (res) setTranslated(res.text);
+  //     setLoader(false)
+  //   } catch (error) {
+  //     console.log("googleTranslator error >>", error);
+  //     setLoader(false)
+  //   }
+  // };
+
+  const translatedHandler = async () => {
+    // return googleTranslator(title)
+    console.log('googleTranslator :>> ', title);
+    setLoader(true)
+    try {
+
+
+      // setLoader(false)
+    } catch (error) {
+      console.log("googleTranslator error >>", error);
+      // setLoader(false)
+    }
+  }
+
+
+
   return (
     <div>
-      <p>Add Lesson</p>
+      <p>Add Vocabulary</p>
       <div className={preview ? styles.hidden : styles.row}>
         <input
           value={title || ""}
@@ -162,10 +203,13 @@ function AddLesson({ defaultValues, postRef, preview }) {
           className={styles.input}
         />
 
-        <div onClick={addLessonHandler}>
+        <div onClick={translatedHandler}>
           <UilPlus size="20" color="#333" />
         </div>
       </div>
+      {loader ? <Loader/> : null}
+      <h4>{translated}</h4>
+      <Button variant="contained" onClick={addLessonHandler}>Add Vocabulary</Button>
     </div>
   );
 }

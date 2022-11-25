@@ -3,6 +3,8 @@ import AuthCheck from '@components/AuthCheck';
 import PostFeed from '@components/PostFeed';
 import { UserContext } from '@lib/context';
 import { firestore, auth, serverTimestamp } from '@lib/firebase';
+import Box from '@mui/material/Box';
+import TextField from '@mui/material/TextField';
 
 import { useContext, useState } from 'react';
 import { useRouter } from 'next/router';
@@ -10,16 +12,23 @@ import { useRouter } from 'next/router';
 import { useCollection } from 'react-firebase-hooks/firestore';
 import kebabCase from 'lodash.kebabcase';
 import toast from 'react-hot-toast';
+import Button from '@mui/material/Button';
+import DeleteIcon from '@mui/icons-material/Delete';
+import SendIcon from '@mui/icons-material/Send';
+import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
 
 const collection = 'vocabulary';
 
 export default function AdminPostsPage(props) {
   return (
-    <main>
+    <main className={styles.center}>
+      <Box style={{marginTop: '20px', width: '90%'}}>
       <AuthCheck>
         <CreateNewPost />
         <PostList />
       </AuthCheck>
+      </Box>
     </main>
   );
 }
@@ -33,7 +42,9 @@ function PostList() {
 
   return (
     <>
-      <h1>Manage your {collection}</h1>
+      <Typography sx={{ mt: 4, mb: 2 }} variant="h6" component="div">
+      {collection}
+          </Typography>
       <PostFeed type={collection} posts={posts} admin />
     </>
   );
@@ -80,20 +91,13 @@ function CreateNewPost() {
 
   return (
     <form onSubmit={createPost}>
-      <input
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        placeholder={"Write your " + collection +" name"}
-        className={styles.input}
-      />
-      <div style={{display: 'block'}}>
-      <p>
-        <strong>Slug:</strong> {slug}
-      </p>
-      <button type="submit" disabled={!isValid} className="btn-green">
-        Create my {collection}
-      </button>
-      </div>
+      <TextField id="outlined-basic" label="Write vocabulary type" variant="outlined" onChange={(e) => setTitle(e.target.value)} className={styles.input}/>
+      
+      <Stack direction="row" className={styles.center2}>
+      <Button type="submit" disabled={!isValid} variant="contained" endIcon={<SendIcon />}>
+        Create & add Vocabulary
+      </Button>
+    </Stack>
     </form>
   );
 }
